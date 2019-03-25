@@ -66,13 +66,23 @@ type DataObject struct {
 	IntValue    int
 }
 
+type activateResponse struct {
+	LicenseKey string `json:"licenseKey"`
+	Signature  string `json:"signature"`
+	Result     int    `json:"result"`
+	Message    string `json:"message"`
+}
+
 func (licenseKey *LicenseKey) HasValidSignature(publicKey string) bool {
 	type RSAKeyValue struct {
 		Modulus  string
 		Exponent string
 	}
 	var k RSAKeyValue
-	xml.Unmarshal([]byte(publicKey), &k)
+	err := xml.Unmarshal([]byte(publicKey), &k)
+	if err != nil {
+		return false
+	}
 
 	modulusBytes, err := base64.StdEncoding.DecodeString(k.Modulus)
 	if err != nil {
@@ -96,6 +106,20 @@ func (licenseKey *LicenseKey) HasValidSignature(publicKey string) bool {
 	err = rsa.VerifyPKCS1v15(&key, crypto.SHA256, hashed[:], licenseKey.signatureBytes)
 
 	return err == nil
+}
+
+func (licenseKey *LicenseKey) ToBytes() ([]byte, error) {
+	licenseKeyBase64 := base64.StdEncoding.EncodeToString(licenseKey.licenseKeyBytes)
+	signatureBase64 := base64.StdEncoding.EncodeToString(licenseKey.signatureBytes)
+
+	temp := activateResponse{
+		LicenseKey: licenseKeyBase64,
+		Signature:  signatureBase64,
+		Result:     0,
+		Message:    "",
+	}
+
+	return json.Marshal(temp)
 }
 
 func (licenseKey *LicenseKey) UnmarshalJSON(b []byte) error {
@@ -211,24 +235,35 @@ type KeyActivateArguments struct {
 }
 
 func KeyActivate(token string, args KeyActivateArguments) (LicenseKey, error) {
-	licenseKeyBytes, signatureBytes, err := makeActivateRequest(token, args)
+	activateResponse, err := makeActivateRequest(token, args)
 	if err != nil {
 		return LicenseKey{}, err
 	}
 
-	var k LicenseKey
-	err = json.Unmarshal(licenseKeyBytes, &k)
+	licenseKeyBytes, signatureBytes, err := parseActivateResponse(&activateResponse)
 	if err != nil {
 		return LicenseKey{}, err
 	}
 
-	k.licenseKeyBytes = licenseKeyBytes
-	k.signatureBytes = signatureBytes
-
-	return k, nil
+	return buildLicenseKey(licenseKeyBytes, signatureBytes)
 }
 
-func makeActivateRequest(token string, args KeyActivateArguments) ([]byte, []byte, error) {
+func KeyFromBytes(b []byte) (LicenseKey, error) {
+	var r activateResponse
+	err := json.Unmarshal(b, &r)
+	if err != nil {
+		return LicenseKey{}, err
+	}
+
+	licenseKeyBytes, signatureBytes, err := parseActivateResponse(&r)
+	if err != nil {
+		return LicenseKey{}, err
+	}
+
+	return buildLicenseKey(licenseKeyBytes, signatureBytes)
+}
+
+func makeActivateRequest(token string, args KeyActivateArguments) (activateResponse, error) {
 	var http http.Client
 
 	// From KeyActivateArguments struct
@@ -247,29 +282,42 @@ func makeActivateRequest(token string, args KeyActivateArguments) ([]byte, []byt
 
 	response, err := http.PostForm("https://app.cryptolens.io/api/key/Activate", data)
 	if err != nil {
-		return []byte{}, []byte{}, err
-	}
-
-	type ActivateResponse struct {
-		LicenseKey string `json:licenseKey`
-		Signature  string `json:signature`
-		Result     int    `json:result`
-		Message    string `json:message`
+		return activateResponse{}, err
 	}
 
 	dec := json.NewDecoder(response.Body)
-	var r ActivateResponse
-	dec.Decode(&r)
+	var r activateResponse
+	err = dec.Decode(&r)
+	if err != nil {
+		return activateResponse{}, err
+	}
 
-	licenseKeyBytes, err := base64.StdEncoding.DecodeString(r.LicenseKey)
+	return r, nil
+}
+
+func parseActivateResponse(response *activateResponse) ([]byte, []byte, error) {
+	licenseKeyBytes, err := base64.StdEncoding.DecodeString(response.LicenseKey)
 	if err != nil {
 		return []byte{}, []byte{}, err
 	}
 
-	signatureBytes, err := base64.StdEncoding.DecodeString(r.Signature)
+	signatureBytes, err := base64.StdEncoding.DecodeString(response.Signature)
 	if err != nil {
 		return []byte{}, []byte{}, err
 	}
 
 	return licenseKeyBytes, signatureBytes, nil
+}
+
+func buildLicenseKey(licenseKeyBytes []byte, signatureBytes []byte) (LicenseKey, error) {
+	var k LicenseKey
+	err := json.Unmarshal(licenseKeyBytes, &k)
+	if err != nil {
+		return LicenseKey{}, err
+	}
+
+	k.licenseKeyBytes = licenseKeyBytes
+	k.signatureBytes = signatureBytes
+
+	return k, nil
 }
