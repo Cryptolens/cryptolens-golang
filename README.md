@@ -67,3 +67,8 @@ if licenseKey.F1 {
 	fmt.Println("Welcome!")
 }
 ```
+
+## Examples
+
+* [Key verification example](https://github.com/Cryptolens/cryptolens-golang/blob/master/examples/example_activate/main.go)
+* [Offline verification example](https://github.com/Cryptolens/cryptolens-golang/blob/master/examples/example_offline/main.go)
