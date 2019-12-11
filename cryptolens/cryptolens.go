@@ -100,7 +100,7 @@ func (licenseKey *LicenseKey) HasValidSignature(publicKey string) bool {
 	if !exponent.IsInt64() {
 		return false
 	}
-	key := rsa.PublicKey{modulus, int(exponent.Int64())}
+	key := rsa.PublicKey{N: modulus, E: int(exponent.Int64())}
 
 	hashed := sha256.Sum256(licenseKey.licenseKeyBytes)
 	err = rsa.VerifyPKCS1v15(&key, crypto.SHA256, hashed[:], licenseKey.signatureBytes)
