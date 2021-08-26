@@ -2,7 +2,7 @@
 
 This library serves to simplify communication with Cryptolens Web API (https://app.cryptolens.io/docs/api).
 
-> **Note**, currently only the **activate** method from the Web API is supported.
+> **Note**: an updated version of the library (with support for offline activation) can be found in the [go_mod branch](https://github.com/cryptolens/cryptolens-golang/tree/go_mod).
 
 In order to get started with the library, start by
 
