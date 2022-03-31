@@ -417,7 +417,7 @@ func makeActivateRequest(token string, args KeyActivateArguments) (activateRespo
 	data.Add("Sign", "true")
 	data.Add("SignMethod", "1")
 
-	response, err := http.PostForm("https://app.cryptolens.io/api/key/Activate", data)
+	response, err := http.PostForm("https://api.cryptolens.io/api/key/Activate", data)
 	if err != nil {
 		return activateResponse{}, err
 	}
