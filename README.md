@@ -42,14 +42,14 @@ constants as follows:
  1. The `token` need to be changed to a valid access token for your account. Access tokens can be created at
     https://app.cryptolens.io/User/AccessToken/. In order to be able to use the `KeyActivate()` function
     the token needs to have the `Activate` scope.
- 1. The correct value for `publicKey` for your account can be found when logged in on Cryptolens.io from
+ 2. The correct value for `publicKey` for your account can be found when logged in on Cryptolens.io from
     the menu in the top-right corner ("Hello <username>!") and then *Security Settings*. Copy paste the
     value from the *Public key* field.
- 1. The `ProductId` can be found at the page for the corresponding product at https://app.cryptolens.io/Product.
- 1. The `Key` is the license key string, and would in most cases be entered by the user of the application
+ 3. The `ProductId` can be found at the page for the corresponding product at https://app.cryptolens.io/Product.
+ 4. The `Key` is the license key string, and would in most cases be entered by the user of the application
     in some application dependent manner.
- 1. The `MachineCode` is an optional argument allowing you to provide an identifier for which
-    device the application is running on, or something with a similar purpuse.
+ 5. The `MachineCode` is an optional argument allowing you to provide an identifier for which
+    device the application is running on, or something with a similar purpuse. You can read more about the ways it can be computed in [this article](https://help.cryptolens.io/faq/index#machine-code-generation).
 
 Finally, additional properties of the license key can be checked if desired:
 
