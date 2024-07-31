@@ -421,6 +421,7 @@ func makeActivateRequest(token string, args KeyActivateArguments) (activateRespo
 	if err != nil {
 		return activateResponse{}, err
 	}
+	defer response.Body.Close()
 
 	dec := json.NewDecoder(response.Body)
 	var r activateResponse
